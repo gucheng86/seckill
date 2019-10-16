@@ -47,10 +47,10 @@
             <div class="modal-foot">
                 <%-- 验证信息 --%>
                 <span id="killPhoneMessage" class="glyphicon"></span>
-                <button type="button" id="killPhoneBtn" class="btn btn-success">
-                    <span class="glyphicon glyphicon-phone"></span>
-                    Submit
-                </button>
+                    <button type="button" id="killPhoneBtn" class="btn btn-success">
+                        <span class="glyphicon glyphicon-phone"></span>
+                        Submit
+                    </button>
             </div>
         </div>
     </div>
@@ -66,14 +66,17 @@
 <%--jQuery countDown倒计时插件--%>
 <script src="http://cdn.bootcss.com/jquery.countdown/2.1.0/jquery.countdown.min.js"></script>
 
+<!-- 交互逻辑 -->
 <c:set var="path" value="${pageContext.request.contextPath}"/>
 <script src="${path}/resource/script/seckill.js" type="text/javascript"></script>
 
+<!-- seckill.detail.init(params) -->
 <script type="text/javascript">
     $(function () {
         //使用EL表达式传入参数
         seckill.detail.init({
             seckillId:${seckill.seckillId},
+            startTime:${seckill.startTime.time}, //毫秒
             endTime:${seckill.endTime.time}
         });
     })
