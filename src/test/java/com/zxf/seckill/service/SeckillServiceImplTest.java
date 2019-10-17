@@ -19,6 +19,7 @@ import java.util.List;
 @ContextConfiguration({"classpath:spring/spring-dao.xml",
                         "classpath:spring/spring-service.xml"})
 public class SeckillServiceImplTest {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private SeckillService seckillService;
@@ -87,6 +88,18 @@ public class SeckillServiceImplTest {
             }
         } else {    //秒杀未开启
             System.out.println(exposer);
+        }
+    }
+
+    @Test
+    public void executeSeckillProcedure() {
+        long seckillId= 1001;
+        long userPhone = 12345123451l;
+        Exposer exposer = seckillService.exportSeckillUrl(seckillId);
+        if(exposer.isExposed()) {
+            String md5 = exposer.getMd5();
+            SeckillExecution execution = seckillService.executeSeckillProcedure(seckillId, userPhone, md5);
+            logger.info(execution.getStateInfo());
         }
     }
 }

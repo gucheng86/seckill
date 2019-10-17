@@ -34,7 +34,7 @@ public enum SeckillStateEnum {
     /**
      * 定义一个静态方法，通过state返回枚举常量对象
      */
-    public static SeckillStateEnum stateOf(int state) {
+    public static SeckillStateEnum valueOf(int state) {
         for(SeckillStateEnum seckillStateEnum : values()) {
             if(seckillStateEnum.getState() == state) {
                 return seckillStateEnum;

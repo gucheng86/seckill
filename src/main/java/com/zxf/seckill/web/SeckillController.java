@@ -100,21 +100,22 @@ public class SeckillController {
             return new SeckillResult<SeckillExecution>(false, "用户未注册");
         }
 
+        //根据dto直接封装出对应的数据结果
         try {
-            //执行秒杀操作
-            SeckillExecution seckillExecution = seckillService.executeSeckill(seckillId, phone, md5);
-            //秒杀成功
+            //执行秒杀操作，使用存储过程
+            SeckillExecution seckillExecution = seckillService.executeSeckillProcedure(seckillId, phone, md5);
+            //1.秒杀执行完毕
             return new SeckillResult<SeckillExecution>(true, seckillExecution);
         } catch (RepeatKillException e1) {
-            //重复秒杀
+            //-1.重复秒杀
             SeckillExecution execution = new SeckillExecution(seckillId, SeckillStateEnum.REPEAT_KILL);
             return new SeckillResult<SeckillExecution>(true, execution);
         } catch (SeckillCloseException e2) {
-            //秒杀关闭
+            //0.秒杀关闭
             SeckillExecution execution = new SeckillExecution(seckillId, SeckillStateEnum.END);
             return new SeckillResult<SeckillExecution>(true, execution);
         } catch (Exception e3) {
-            //系统异常
+            //-2.系统异常
             SeckillExecution execution = new SeckillExecution(seckillId, SeckillStateEnum.INNER_ERROR);
             return new SeckillResult<SeckillExecution>(true, execution);
         }
