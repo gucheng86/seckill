@@ -45,7 +45,7 @@
             </div>
 
             <div class="modal-foot">
-                <%-- 验证信息 --%>
+                <%-- 结果信息 --%>
                 <span id="killPhoneMessage" class="glyphicon"></span>
                     <button type="button" id="killPhoneBtn" class="btn btn-success">
                         <span class="glyphicon glyphicon-phone"></span>

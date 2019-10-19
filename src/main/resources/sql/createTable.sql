@@ -1,5 +1,5 @@
 -- 创建数据库
---create seckill;
+create databse seckill;
 
 -- 使用数据库
 use seckill;

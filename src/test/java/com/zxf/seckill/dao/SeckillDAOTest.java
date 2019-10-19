@@ -7,6 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
 
@@ -41,5 +46,13 @@ public class SeckillDAOTest {
         for (Seckill seckill : seckills) {
             System.out.println(seckill.getName());
         }
+    }
+
+    @Test
+    public void getConnection() throws ClassNotFoundException, IOException, SQLException {
+        Class.forName("com.mysql.jdbc.Driver");
+        Connection connection = (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/seckill?characterEncoding=utf-8&serverTimezone=Asia/Shanghai", "root", "admin");
+        Statement statement = connection.createStatement();
+        System.out.println(connection.isClosed());
     }
 }

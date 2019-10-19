@@ -156,8 +156,9 @@ public class SeckillServiceImpl implements SeckillService {
         }
     }
 
+    /** 使用存储过程的秒杀逻辑*/
     @Override
-    public SeckillExecution executeSeckillProcedure(long seckillId, long userPhone, String md5) throws SeckillException, RepeatKillException, SeckillCloseException {
+    public SeckillExecution executeSeckillProcedure(long seckillId, long userPhone, String md5) {
         //1.秒杀数据被重写
         if (md5 == null || !md5.equals(getMD5(seckillId))) {
             throw new SeckillException("seckill data rewrite");
@@ -184,6 +185,7 @@ public class SeckillServiceImpl implements SeckillService {
                 return new SeckillExecution(seckillId, SeckillStateEnum.valueOf(result));
             }
         }catch (Exception e){
+            e.printStackTrace();
             logger.error(e.getMessage(), e);
             // 内部异常
             return new SeckillExecution(seckillId, SeckillStateEnum.INNER_ERROR);

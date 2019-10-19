@@ -21,7 +21,4 @@ public class JedisUtils {
 //        return LOCK_SUCCESS.equals(result);
         return true;
     }
-
-
-
 }

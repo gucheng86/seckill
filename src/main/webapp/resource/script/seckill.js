@@ -11,7 +11,7 @@ var seckill = {
             return '/seckill/'+seckillId+'/exposer';
         },
         execution: function (seckillId, md5) {
-            return '/seckill' + seckillId + '/' + md5 + 'execution';
+            return '/seckill/' + seckillId + '/' + md5 + '/execution';
         }
     },
 
@@ -41,13 +41,14 @@ var seckill = {
                     if(seckill.validatePhone(inputPhone)) {
                         //将电话写入cookie，设置有效期和有效路径
                         $.cookie('killPhone', inputPhone, {expires:7, path:'/seckill'})
+                        console.log("killPhone", $.cookie('killPhone'))
                         //刷新页面
                         window.location.reload();
                     } else {    //
                         //先隐藏，再显示。动态效果
                         $('#killPhoneMessage').hide().html('<label class="label label-danger">手机号错误！</label>').show(300);
                     }
-                })
+                });
             }
 
             var startTime = params['startTime'];
@@ -55,10 +56,10 @@ var seckill = {
             var seckillId = params['seckillId'];
             //2登录后的计时交互
             //获取系统时间
-            $.get(seckill.URL.now(), {}, function () {
+            $.get(seckill.URL.now(), {}, function (result) {
                 if(result && result['success']) {
                     var nowTime = result['data'];
-                    //时间判断
+                    //计时显示
                     seckill.countdown(seckillId, nowTime, startTime, endTime);
                 } else {
                     console.log('result', result)
@@ -105,10 +106,10 @@ var seckill = {
     },
 
     //3.秒杀执行逻辑
-    handleSeckillkill: function(seckillId, node) {
+    handlerSeckill: function(seckillId, node) {
         //获取秒杀地址，控制显示逻辑，执行秒杀
         node.hide().html('<button class="btn btn-primary btn-lg" id="killBtn">开始秒杀</button>').show(300);
-        $.post(seckill.URL.exposer(), {}, function (result) {
+        $.post(seckill.URL.exposer(seckillId), {}, function (result) {
             //在回调函数进行交互流程
             if(result && result['success']) {
                 var exposer = result['data'];   //秒杀地址
@@ -130,7 +131,7 @@ var seckill = {
                                 //获取秒杀信息
                                 var killResult = result['data']
                                 var state = killResult['state']
-                                var staeInfo = killResult['stateInfo']
+                                var stateInfo = killResult['stateInfo']
 
                                 //3.显示秒杀结果到节点中
                                 node.html('<span class="label label-succee">' +stateInfo + '</span>')

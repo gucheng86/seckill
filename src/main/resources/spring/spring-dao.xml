@@ -29,6 +29,13 @@
         <!--当获取连接失败重试次数-->
         <property name="acquireRetryAttempts" value="2"/>
     </bean>
+    <bean id="dataSource1" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <!-- 连接参数 -->
+        <property name="driverClassName" value="${driver}"/>
+        <property name="url" value="${url}"/>
+        <property name="username" value="${username}" />
+        <property name="password" value="${password}"/>
+    </bean>
 
     <!-- 约定大于配置-->
     <!-- 3.配置SqlSessionFactory -->

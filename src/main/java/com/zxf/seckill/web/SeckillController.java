@@ -5,8 +5,6 @@ import com.zxf.seckill.dto.SeckillExecution;
 import com.zxf.seckill.dto.SeckillResult;
 import com.zxf.seckill.entity.Seckill;
 import com.zxf.seckill.enums.SeckillStateEnum;
-import com.zxf.seckill.exception.RepeatKillException;
-import com.zxf.seckill.exception.SeckillCloseException;
 import com.zxf.seckill.service.SeckillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -97,7 +95,7 @@ public class SeckillController {
 
         //用户电话为空
         if (phone == null) {
-            return new SeckillResult<SeckillExecution>(false, "用户未注册");
+            return new SeckillResult<>(false, "用户未注册");
         }
 
         //根据dto直接封装出对应的数据结果
@@ -105,26 +103,19 @@ public class SeckillController {
             //执行秒杀操作，使用存储过程
             SeckillExecution seckillExecution = seckillService.executeSeckillProcedure(seckillId, phone, md5);
             //1.秒杀执行完毕
-            return new SeckillResult<SeckillExecution>(true, seckillExecution);
-        } catch (RepeatKillException e1) {
-            //-1.重复秒杀
-            SeckillExecution execution = new SeckillExecution(seckillId, SeckillStateEnum.REPEAT_KILL);
-            return new SeckillResult<SeckillExecution>(true, execution);
-        } catch (SeckillCloseException e2) {
-            //0.秒杀关闭
-            SeckillExecution execution = new SeckillExecution(seckillId, SeckillStateEnum.END);
-            return new SeckillResult<SeckillExecution>(true, execution);
+            return new SeckillResult<>(true, seckillExecution);
         } catch (Exception e3) {
             //-2.系统异常
             SeckillExecution execution = new SeckillExecution(seckillId, SeckillStateEnum.INNER_ERROR);
-            return new SeckillResult<SeckillExecution>(true, execution);
+            return new SeckillResult<>(true, execution);
         }
     }
 
     //获取系统当前时间，毫秒
     @GetMapping("/time/now")
+    @ResponseBody
     public SeckillResult<Long> time(){
         Date date = new Date();
-        return new SeckillResult<Long>(true, date.getTime());
+        return new SeckillResult<>(true, date.getTime());
     }
 }
