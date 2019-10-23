@@ -4,6 +4,17 @@ package com.zxf.seckill;
 public class Test {
     @org.junit.Test
     public void test1() {
+        Thread[] threads = new Thread[10];
+        for (int i = 0; i < 10; i++) {
+            threads[i] = new Thread(){
+                public void run() {
+                    System.out.println(getName());
+                }
+            };
+        }
+        for(Thread thread : threads) {
+            thread.start();
+        }
     }
 
     @org.junit.Test

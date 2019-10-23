@@ -33,4 +33,12 @@ public interface SeckillDAO {
      * @param paramMap
      */
     void killByProcedure(Map<String, Object> paramMap);
+
+    /**
+     * 将redis缓存中的数据持久化到数据库
+     * @param seckillId
+     * @param Number 缓存数据
+     * @return
+     */
+    int updateReduce(@Param("seckillId")long seckillId, @Param("number")int Number);
 }

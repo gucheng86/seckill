@@ -115,32 +115,28 @@ public class SeckillServiceImplTest {
         }
     }
 
-
-    //根据商品id查询商品，对商品进行秒杀，再次查询商品; redis数据一致性
     @Test
-    public void test() {
-        long seckillId = 1002;
-
-        Seckill seckill = seckillService.getSeckillById(seckillId);
-        System.out.println("1.seckill number: " + seckill.getNumber());
-
+    public void testSeckillRedis() {
+        long seckillId = 1000;
         Exposer exposer = seckillService.exportSeckillUrl(seckillId);
-        if(exposer.isExposed()) {
-            long userPhone = 12345678921L;
+        //如果秒杀已开启
+        if (exposer.isExposed()) {
+            System.out.println(exposer);
+
+            //执行秒杀操作的参数
+            long userPhone = 22476191844L;
+            long userPhone2 = 23476191845L;
             String md5 = exposer.getMd5();
             try{
-                SeckillExecution execution = seckillService.executeSeckill(seckillId, userPhone, md5);
-            } catch(RepeatKillException e) {
-                e.printStackTrace();
-            } catch(SeckillCloseException e1){
-                e1.printStackTrace();
-            }
-        } else {
-            System.out.println("秒杀为开始");
-        }
-        System.out.println("2.seckill number: " + seckill.getNumber());
+                SeckillExecution execution1 = seckillService.executeSeckillRedis(seckillId, userPhone, md5);
+                System.out.println(execution1.getState() + execution1.getStateInfo());
 
-        Seckill seckill2 = seckillService.getSeckillById(seckillId);
-        System.out.println("3.seckill number: " + seckill2.getNumber());
+                SeckillExecution execution2 = seckillService.executeSeckillRedis(seckillId, userPhone2, md5);
+                System.out.println(execution2.getState() + execution2.getStateInfo());
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
+
 }

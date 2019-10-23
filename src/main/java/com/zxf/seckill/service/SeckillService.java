@@ -51,4 +51,16 @@ public interface SeckillService {
     SeckillExecution executeSeckillProcedure(long seckillId, long userPhone, String md5);
 
 
+    /**
+     * 对redis缓存中的库存进行更新操作，更新成功后在对数据库进行插入操作
+     * @param seckillId
+     * @param userPhone
+     * @param md5
+     * @return
+     * @throws SeckillException
+     */
+    SeckillExecution executeSeckillRedis(long seckillId, long userPhone, String md5)
+            throws SeckillException;
+
+
 }

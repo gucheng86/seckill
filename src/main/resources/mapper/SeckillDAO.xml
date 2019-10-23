@@ -4,6 +4,7 @@
 
 <!-- 为dao接口方法提供sql语句配置 -->
 <mapper namespace="com.zxf.seckill.dao.SeckillDAO">
+    <!-- 秒杀操作的第二步 -->
     <update id="reduceNumber">
         UPDATE seckill SET number = number -1
             WHERE seckill_id = #{seckillId}
@@ -13,9 +14,15 @@
             AND number > 0;
     </update>
 
+    <!-- 将redis中的缓存数据持久化到数据库 -->
+    <update id="updateReduce" parameterType="_long">
+        UPDATE seckill SET number = #{number}
+            WHERE seckill_id = #{seckillId}
+    </update>
+
     <select id="queryById" resultType="Seckill" parameterType="_long">
         SELECT * FROM seckill
-            WHERE seckill_id = ${_parameter}
+            WHERE seckill_id = #{_parameter}
     </select>
 
     <select id="queryAll" resultType="Seckill">

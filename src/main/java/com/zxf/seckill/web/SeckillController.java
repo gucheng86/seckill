@@ -5,6 +5,9 @@ import com.zxf.seckill.dto.SeckillExecution;
 import com.zxf.seckill.dto.SeckillResult;
 import com.zxf.seckill.entity.Seckill;
 import com.zxf.seckill.enums.SeckillStateEnum;
+import com.zxf.seckill.exception.RepeatKillException;
+import com.zxf.seckill.exception.SeckillCloseException;
+import com.zxf.seckill.exception.UnderStockException;
 import com.zxf.seckill.service.SeckillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -98,15 +101,26 @@ public class SeckillController {
             return new SeckillResult<>(false, "用户未注册");
         }
 
+        //秒杀结果
+        SeckillExecution execution;
         //根据dto直接封装出对应的数据结果
         try {
             //执行秒杀操作，使用存储过程
-            SeckillExecution seckillExecution = seckillService.executeSeckillProcedure(seckillId, phone, md5);
+             execution = seckillService.executeSeckillProcedure(seckillId, phone, md5);
             //1.秒杀执行完毕
-            return new SeckillResult<>(true, seckillExecution);
+            return new SeckillResult<>(true, execution);
+        }  catch(RepeatKillException e) {   //spring事务通过异常回滚
+            execution = new SeckillExecution(seckillId, SeckillStateEnum.REPEAT_KILL);
+            return new SeckillResult<>(true, execution);
+        } catch(SeckillCloseException e1) {
+            execution = new SeckillExecution(seckillId, SeckillStateEnum.END);
+            return new SeckillResult<>(true, execution);
+        } catch (UnderStockException e2) {
+            execution = new SeckillExecution(seckillId, SeckillStateEnum.UNDER_STOCK);
+            return new SeckillResult<>(true, execution);
         } catch (Exception e3) {
             //-2.系统异常
-            SeckillExecution execution = new SeckillExecution(seckillId, SeckillStateEnum.INNER_ERROR);
+            execution = new SeckillExecution(seckillId, SeckillStateEnum.INNER_ERROR);
             return new SeckillResult<>(true, execution);
         }
     }
