@@ -8,14 +8,14 @@ import com.zxf.seckill.dto.SeckillExecution;
 import com.zxf.seckill.entity.Seckill;
 import com.zxf.seckill.entity.SuccessKilled;
 import com.zxf.seckill.enums.SeckillStateEnum;
-import com.zxf.seckill.exception.RepeatKillException;
-import com.zxf.seckill.exception.SeckillCloseException;
-import com.zxf.seckill.exception.SeckillException;
+import com.zxf.seckill.exception.*;
 import com.zxf.seckill.service.SeckillService;
+import com.zxf.seckill.util.RedisUtil;
 import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
@@ -41,12 +41,19 @@ public class SeckillServiceImpl implements SeckillService {
     @Autowired
     private RedisDAO redisDAO;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     //查询前5条秒杀商品
+    //key：listSeckill  value：序列化后的List<Seckill>
+    @Cacheable(value = "aboutSeckill")
     @Override
     public List<Seckill> getSeckillList() {
         return seckillDAO.queryAll(0, 4);
     }
 
+    //查到的数据存到seckills缓存区间，key为seckill_id，value为序列化后的seckill对象
+    @Cacheable(value="aboutSeckill", key="'seckill_'+#seckillId")
     @Override
     public Seckill getSeckillById(long seckillId) {
         return seckillDAO.queryById(seckillId);
@@ -75,9 +82,6 @@ public class SeckillServiceImpl implements SeckillService {
         }
 
         //1.查不到这个秒杀产品的记录
-        if (seckill == null) {
-            return new Exposer(false, seckillId);
-        }
 
         //2.秒杀时间
         Date startTime = seckill.getStartTime();
@@ -202,14 +206,14 @@ public class SeckillServiceImpl implements SeckillService {
     public SeckillExecution executeSeckillRedis(long seckillId, long userPhone, String md5) {
         //检查MD5
         if (md5 == null || !md5.equals(getMD5(seckillId))) {
-            throw new SeckillException("seckill data rewrite");
+            throw new DataRewriteException("seckill data rewrite");
         }
         try {
             //判断秒杀时间
 //            Seckill seckill1 = seckillDAO.queryById(seckillId);
             Seckill seckill = redisDAO.getSeckill(seckillId);
             Date now = new Date();
-            boolean time = now.getTime() > seckill.getStartTime().getTime() && now.getTime() < seckill.getEndTime().getTime();
+            boolean time = now.getTime() > seckill.getStartTime().getTime();
 
             String number = redisDAO.getStock(seckillId);
             if(number == null) {
@@ -247,5 +251,55 @@ public class SeckillServiceImpl implements SeckillService {
         }
     }
 
+    /**
+     * RedisConfig自动缓存商品，就不需要手动了
+     */
+    @Override
+    public Exposer exportSeckillUrl2(Long seckillId) {
+        //获取缓存中的商品
+        Seckill seckill = (Seckill)redisUtil.get("seckill_" + seckillId);
+
+        //1.秒杀时间
+        Date startTime = seckill.getStartTime();
+        Date endTime = seckill.getEndTime();
+        //系统当前时间
+        Date nowTime = new Date();
+        if (endTime.getTime() < nowTime.getTime()) {
+            return new Exposer(false, seckillId, nowTime.getTime(), startTime.getTime(), endTime.getTime());
+        }
+
+        //2.缓存商品库存
+        redisUtil.putStock(seckillId, seckill.getNumber());
+
+        //3.秒杀开启，返回秒杀商品id以及md5
+        String md5 = getMD5(seckillId);
+        return new Exposer(true, md5, seckillId);
+    }
+
+    /**
+     * 执行秒杀的流程；减库存；加记录
+     */
+    @Transactional
+    @Override
+    public SeckillExecution executeSeckillMQ(long seckillId, long userPhone, String md5) throws SeckillException {
+        //检查MD5
+        if (md5 == null || !md5.equals(getMD5(seckillId))) {
+            throw new DataRewriteException("seckill data rewrite");
+        }
+
+        //1.减少redis中的库存
+        long decr = redisUtil.decr(seckillId + "_stock");
+        if(decr < 0) {
+            throw new UnderStockException("under stock");
+        }
+
+        //2.增加订单
+        successKilledDAO.insertSuccessKilled(seckillId, userPhone);
+        SuccessKilled successKilled = successKilledDAO.queryByIdWithSeckill(seckillId, userPhone);
+        //将结果保存到redis中
+        redisUtil.putOrder(seckillId, userPhone, "order");
+
+        return SeckillExecution.success(seckillId, SeckillStateEnum.SUCCESS, successKilled);
+    }
 }
 

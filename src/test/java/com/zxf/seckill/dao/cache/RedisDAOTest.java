@@ -24,35 +24,15 @@ public class RedisDAOTest {
     public void getandput() {
         //get and put
         Seckill seckill = redisDAO.getSeckill(id);
-        if(seckill == null) {
+        if (seckill == null) {
             seckill = seckillDAO.queryById(id);
-            if(seckill != null) {
+            if (seckill != null) {
                 String result = redisDAO.putSeckill(seckill);
                 System.out.println(result);
                 seckill = redisDAO.getSeckill(id);
                 System.out.println(seckill);
             }
         }
-    }
-
-    //通过缓存的商品对象减少商品库存
-    @Test
-    public void reduceBySeckill() {
-        //1.查询seckill
-        final long seckillId = 1001;
-        Seckill seckill = seckillDAO.queryById(seckillId);
-        System.out.println("商品库存：" + seckill.getNumber());
-
-        //2.将商品放入redis中共
-        redisDAO.putSeckill(seckill);
-
-        //3.让多个线程执行减库存操作
-        redisDAO.isReduceSeckill(seckillId);
-
-        seckill = redisDAO.getSeckill(seckillId);
-        System.out.println("商品库存：" + seckill.getNumber());
-
-//        System.out.println("商品库存：" + seckillDAO.queryById(seckillId).getNumber());
     }
 
     //通过缓存的商品库存减少库存
@@ -62,23 +42,24 @@ public class RedisDAOTest {
         Seckill seckill = seckillDAO.queryById(seckillId);
         System.out.println(seckill.getNumber());
         //存入缓存
-        redisDAO.putStock(seckillId, "" + seckill.getNumber());
+        redisDAO.putStock(seckillId, "10");
 
         for(int i = 0; i < 10; i++) {
             Thread thread = new Thread() {
                 public void run() {
-                    System.out.println("stock:" + redisDAO.reduceStock(seckillId));
+                    redisDAO.reduceStock(seckillId);
+                    System.out.println(redisDAO.getStock(seckillId));
                 }
             };
             thread.start();
-            thread.join();
+//            thread.join();
         }
 
         //减少缓存
 //        redisDAO.reduceStock(seckillId);
 
         //获取缓存
-        System.out.println(redisDAO.getStock(seckillId));
+//        System.out.println(redisDAO.getStock(seckillId));
 
 
 

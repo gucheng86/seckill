@@ -8,7 +8,8 @@
 
 <!-- 配置整合mybatis的过程 -->
     <!-- 1.数据库连接的相关参数 -->
-    <context:property-placeholder location="classpath:jdbc.properties"/>
+<!--    <context:property-placeholder location="classpath:jdbc.properties"/>-->
+    <context:property-placeholder location="classpath:/jdbc.properties,classpath:/redis.properties" />
     
     <!-- 2. 数据库连接池 -->
     <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
@@ -48,7 +49,7 @@
         <property name="configLocation" value="classpath:mybatis-config.xml"/>
         <!-- 扫描实体包，使用别名，多个用;隔开 -->
         <property name="typeAliasesPackage" value="com.zxf.seckill.entity"/>
-        <!-- 扫描sql配置文件：mapper对应的xml文件 -->
+        <!-- 扫描sql配置文件：mapper对应的xml文件，有Mapper类就不用扫描这个xml -->
         <property name="mapperLocations" value="classpath:mapper/*.xml"/>
     </bean>
 

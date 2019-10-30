@@ -1,14 +1,19 @@
 package com.zxf.seckill.web;
 
+import com.zxf.seckill.config.RabbitMQConfig;
 import com.zxf.seckill.dto.Exposer;
 import com.zxf.seckill.dto.SeckillExecution;
 import com.zxf.seckill.dto.SeckillResult;
 import com.zxf.seckill.entity.Seckill;
 import com.zxf.seckill.enums.SeckillStateEnum;
+import com.zxf.seckill.exception.DataRewriteException;
 import com.zxf.seckill.exception.RepeatKillException;
 import com.zxf.seckill.exception.SeckillCloseException;
 import com.zxf.seckill.exception.UnderStockException;
+import com.zxf.seckill.mq.RabbitMessage;
 import com.zxf.seckill.service.SeckillService;
+import com.zxf.seckill.util.RedisUtil;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +27,11 @@ import java.util.List;
 public class SeckillController {
     @Autowired
     SeckillService seckillService;
+    @Autowired
+    RedisUtil redisUtil;
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+
 
     //获取商品列表
     @GetMapping("/list")
@@ -67,7 +77,9 @@ public class SeckillController {
         //1.成功获取秒杀地址
         try {
             //根据商品id获取秒杀地址
-            Exposer exposer = seckillService.exportSeckillUrl(seckillId);
+//            Exposer exposer = seckillService.exportSeckillUrl(seckillId);
+            //使用redisConfig之后，会自动缓存商品
+            Exposer exposer = seckillService.exportSeckillUrl2(seckillId);
             result = new SeckillResult<Exposer>(true, exposer);
         }
         //2.获取秒杀地址失败，并传递异常信息
@@ -89,7 +101,7 @@ public class SeckillController {
      * @return 用户的秒杀信息
      * @CookieValue 将请求的Cookie数据，映射到功能处理方法的参数上。required表示是否必须包含value指定的参数。
      */
-    @PostMapping(value = "/{seckillId}/{md5}/execution", produces = {"application/json;charset=UTF-8"})
+//    @PostMapping(value = "/{seckillId}/{md5}/execution", produces = {"application/json;charset=UTF-8"})
     @ResponseBody
     public SeckillResult<SeckillExecution> execute(
             @PathVariable("seckillId") Long seckillId,
@@ -113,19 +125,54 @@ public class SeckillController {
             execution = new SeckillExecution(seckillId, SeckillStateEnum.REPEAT_KILL);
             return new SeckillResult<>(true, execution);
         } catch(SeckillCloseException e1) {
-            execution = new SeckillExecution(seckillId, SeckillStateEnum.END);
+            execution = new SeckillExecution(seckillId, SeckillStateEnum.TIME_END);
             return new SeckillResult<>(true, execution);
         } catch (UnderStockException e2) {
             execution = new SeckillExecution(seckillId, SeckillStateEnum.UNDER_STOCK);
             return new SeckillResult<>(true, execution);
-        } catch (Exception e3) {
+        } catch (DataRewriteException e3) {
+            execution = new SeckillExecution(seckillId, SeckillStateEnum.DATA_REWRITE);
+            return new SeckillResult<>(true, execution);
+        }catch (Exception e4) {
             //-2.系统异常
             execution = new SeckillExecution(seckillId, SeckillStateEnum.INNER_ERROR);
             return new SeckillResult<>(true, execution);
         }
     }
 
-    //获取系统当前时间，毫秒
+    @PostMapping(value = "/{seckillId}/{md5}/execution", produces = {"application/json;charset=UTF-8"})
+    @ResponseBody
+    public SeckillResult<SeckillExecution> executeMQ(
+            @PathVariable("seckillId") Long seckillId,
+            @PathVariable("md5") String md5,
+            @CookieValue(value = "killPhone", required = false) Long phone) {
+        ///用户电话为空：这个部分可以用其他方法中解决，设置拦截器验证登录
+        if (phone == null) {
+            return new SeckillResult<>(false, "用户未注册");
+        }
+
+        //将用户的秒杀请求放入到MQ中，状态为排队中
+        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME, new RabbitMessage(seckillId, phone, md5));
+
+        //给前端返回排队状态
+        SeckillExecution execution = SeckillExecution.unsuccess(seckillId, SeckillStateEnum.QUEUE);
+        SeckillResult<SeckillExecution> result = new SeckillResult<>(true, execution);
+        //记录到redis中
+        redisUtil.putResult(seckillId, phone, result);
+
+        return result;
+    }
+
+    /**
+     * 从redis缓存中查询秒杀结果
+     */
+    @GetMapping("/{seckillId}/result")
+    @ResponseBody
+    public Object executeResult(@PathVariable("seckillId")long seckillId, @CookieValue(value = "killPhone", required = false) Long phone) {
+        return redisUtil.getResult(seckillId, phone);
+    }
+
+        //获取系统当前时间，毫秒
     @GetMapping("/time/now")
     @ResponseBody
     public SeckillResult<Long> time(){

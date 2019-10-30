@@ -6,9 +6,11 @@ import com.zxf.seckill.entity.Seckill;
 import com.zxf.seckill.exception.RepeatKillException;
 import com.zxf.seckill.exception.SeckillCloseException;
 import com.zxf.seckill.exception.SeckillException;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public interface SeckillService {
     /**
      * 查询全部的秒杀商品
@@ -61,6 +63,14 @@ public interface SeckillService {
      */
     SeckillExecution executeSeckillRedis(long seckillId, long userPhone, String md5)
             throws SeckillException;
+
+
+    Exposer exportSeckillUrl2(Long seckillId);
+
+    /**
+     * 将超时和订单重复放在队列中进行判断，秒杀业务只进行减库存和加订单
+     */
+    SeckillExecution executeSeckillMQ(long seckillId, long userPhone, String md5) throws SeckillException;
 
 
 }

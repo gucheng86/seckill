@@ -12,6 +12,9 @@ var seckill = {
         },
         execution: function (seckillId, md5) {
             return '/seckill/' + seckillId + '/' + md5 + '/execution';
+        },
+        result: function (seckillId) {
+            return '/sekcill/' + seckillId + '/result';
         }
     },
 
@@ -126,22 +129,35 @@ var seckill = {
                         //1.先禁用按钮
                         $(this).addClass('disabled');
                         //2.再发送秒杀请求
-                        $.post(killUrl, {}, function (result) {
-                            if(result && result['success']){
-                                //获取秒杀信息
-                                var killResult = result['data']
-                                var state = killResult['state']
-                                var stateInfo = killResult['stateInfo']
+                        // $.post(killUrl, {}, function (result) {
+                        //     if(result && result['success']){
+                        //         //获取秒杀信息
+                        //         var killResult = result['data']
+                        //         var state = killResult['state']
+                        //         var stateInfo = killResult['stateInfo']
+                        //
+                        //         //3.显示秒杀结果到节点中
+                        //         node.html('<span class="label label-succee">' +stateInfo + '</span>')
+                        //     }
+                        // })
 
-                                //3.显示秒杀结果到节点中
-                                node.html('<span class="label label-succee">' +stateInfo + '</span>')
+                        $.post(killUrl, {}, function (result) {
+                            if(result && result['success']) {
+                                var killResult = result['data']
+                                var stateInfo = killResult['stateInfo']
+                                if(stateInfo==="排队中") {    //排队中
+                                    seckill.getResult(seckillId, node);
+                                } else {    //直接显示
+                                    node.html('<span class="label label-succee">' +stateInfo + '</span>')
+                                }
                             }
+
                         })
                     })
                 } else {    //未开启秒杀
-                    var now = exposer['now']
-                    var start = exposer['start']
-                    var end = exposer['end']
+                    var now = exposer['now'];
+                    var start = exposer['start'];
+                    var end = exposer['end'];
                     //重新进入计时逻辑
                     seckill.countdown(seckillId, now, start, end);
                 }
@@ -149,5 +165,19 @@ var seckill = {
                 console.log('result: ' + result);
             }
         })
+    },
+    
+    //4.向后端询问排队结果
+    getResult: function (seckillId, node) {
+      $.get(seckill.URL.result(seckillId), {} ,function (result) {
+          var stateInfo = result['data']['stateInfo'];
+          if(stateInfo === "排队中") {    //排队中，1s后向服务器查询结果
+            setTimeout(function () {
+                this.getResult(seckillId);
+            }, 1000)
+          } else{   //显示秒杀结果
+              node.html('<span class="label label-succee">' +stateInfo + '</span>')
+          }
+      })
     }
 }

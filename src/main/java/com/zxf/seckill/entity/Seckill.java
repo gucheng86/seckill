@@ -1,11 +1,12 @@
 package com.zxf.seckill.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * 秒杀产品：id，名称，库存，开始时间，结束时间，创建时间
  */
-public class Seckill {
+public class Seckill implements Serializable {
     private long seckillId;
     private String name;
     private int number;

@@ -2,11 +2,12 @@ package com.zxf.seckill.enums;
 
 public enum SeckillStateEnum {
     SUCCESS(1, "秒杀成功"),
-    END(0, "秒杀结束"),
-    REPEAT_KILL(-1, "秒杀重复"),
-    UNDER_STOCK(-2, "库存不足"),
-    INNER_ERROR(-3, "系统异常"),
-    DATA_REWRITE(-4, "数据篡改");
+    QUEUE(0, "排队中"),
+    TIME_END(-1, "秒杀结束"),
+    REPEAT_KILL(-2, "秒杀重复"),
+    UNDER_STOCK(-3, "库存不足"),
+    INNER_ERROR(-4, "系统异常"),
+    DATA_REWRITE(-5, "数据篡改");
 
     private int state;
     private  String info;

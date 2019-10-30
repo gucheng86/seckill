@@ -10,24 +10,30 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration({"classpath:spring/spring-dao.xml",
-                        "classpath:spring/spring-service.xml"})
+@ContextConfiguration({
+        "classpath:spring/spring-service.xml",
+        "classpath:spring/spring-redis.xml"})
 public class SeckillServiceImplTest {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private SeckillService seckillService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     @Test
     public void getSeckillList() {
         List<Seckill> seckills = seckillService.getSeckillList();
         System.out.println(seckills);
+        System.out.println(redisTemplate.opsForValue().get("getSeckillList"));
     }
 
     @Test
@@ -35,6 +41,7 @@ public class SeckillServiceImplTest {
         long seckillId = 1000;
         Seckill seckill = seckillService.getSeckillById(seckillId);
         System.out.println(seckill);
+        System.out.println(redisTemplate.opsForValue().get("seckill_1000"));
     }
 
     //输出商品的秒杀地址

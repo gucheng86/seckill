@@ -4,7 +4,6 @@ import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;
 import com.dyuproject.protostuff.runtime.RuntimeSchema;
 import com.zxf.seckill.entity.Seckill;
-import com.zxf.seckill.exception.UnderStockException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -36,7 +35,7 @@ public class RedisDAO {
             Jedis jedis = jedisPool.getResource();
             try {
                 //实现序列化操作
-                // get->byte[]->反序列化->Object[Seckill]
+                // key->byte[]->反序列化->Object<Seckill>
                 // 采用第三方序列化
                 String key = "seckill:" + seckillId;
                 byte[] bytes = jedis.get(key.getBytes());
@@ -82,21 +81,6 @@ public class RedisDAO {
             logger.error(e.getMessage(), e);
         }
         return null;
-    }
-
-
-    //根据id获取对象，将对象的库存减一
-    public synchronized boolean isReduceSeckill(long seckillId) {
-        Seckill seckill = getSeckill(seckillId);
-        int number = seckill.getNumber();
-        if (number > 0) {
-            //更新库存并放入到缓存中
-            seckill.setNumber(--number);
-            putSeckill(seckill);
-            return true;   //更新成功
-        } else {    //抛出异常
-            throw new UnderStockException("库存不足");
-        }
     }
 
     /**

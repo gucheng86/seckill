@@ -1,37 +1,43 @@
 package com.zxf.seckill;
 
 
+import com.zxf.seckill.dto.SeckillExecution;
+import com.zxf.seckill.dto.SeckillResult;
+import org.junit.Assert;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(value = "classpath:spring/spring-redis.xml")
 public class Test {
+    @Autowired
+    RedisTemplate<String, Object> redisTemplate;
+
+    private String name;
+
     @org.junit.Test
-    public void test1() {
-        Thread[] threads = new Thread[10];
-        for (int i = 0; i < 10; i++) {
-            threads[i] = new Thread(){
-                public void run() {
-                    System.out.println(getName());
-                }
-            };
-        }
-        for(Thread thread : threads) {
-            thread.start();
-        }
+    public void test() {
+        Assert.assertNotNull(redisTemplate);
+        System.out.println(redisTemplate.getKeySerializer());
+        System.out.println(redisTemplate.getValueSerializer());
+        System.out.println(redisTemplate.getConnectionFactory().getClass());
     }
 
     @org.junit.Test
     public void test2() {
-        try{
-            Son s = new Son();
-            try {
-                throw s;
-            } catch (Father f) {
-                System.out.println("father");
-                throw s;
-            }
-        } catch (Son son) {
-            System.out.println("son");
-        }
-    }
-}
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
-class Father extends Exception {}
-class Son extends Father{}
+        redisTemplate.opsForValue().set("id", 1);
+        System.out.println(redisTemplate.opsForValue().get("id"));
+        System.out.println(redisTemplate.opsForValue().increment("id", 1));
+        System.out.println(redisTemplate.opsForValue().get("id"));
+
+        redisTemplate.opsForValue().set("result", new SeckillResult<SeckillExecution>(false, "错误"));
+        redisTemplate.opsForValue().get("result");
+    }
+
+}

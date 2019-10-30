@@ -19,6 +19,8 @@ public class SeckillExecution {
     //秒杀成功时，传递秒杀的信息
     private SuccessKilled successKilled;
 
+    private SeckillExecution(){}
+
     //秒杀成功，返回秒杀信息
     public SeckillExecution(long seckillId, SeckillStateEnum stateEnum, SuccessKilled successKilled) {
         this.seckillId = seckillId;
@@ -33,6 +35,24 @@ public class SeckillExecution {
         this.state = stateEnum.getState();
         this.stateInfo = stateEnum.getInfo();
     }
+
+
+    /***使用静态方法返回秒杀执行结果***/
+    public static SeckillExecution unsuccess(long seckillId, SeckillStateEnum stateEnum) {
+        SeckillExecution execution = new SeckillExecution();
+        execution.setSeckillId(seckillId);
+        execution.setState(stateEnum.getState());
+        execution.setStateInfo(stateEnum.getInfo());
+        return execution;
+    }
+    public static SeckillExecution success(long seckillId, SeckillStateEnum stateEnum, SuccessKilled successKilled) {
+        SeckillExecution execution = new SeckillExecution();
+        execution.setSuccessKilled(successKilled);
+        execution.setState(stateEnum.getState());
+        execution.setStateInfo(stateEnum.getInfo());
+        return execution;
+    }
+
 
     @Override
     public String toString() {
