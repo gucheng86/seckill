@@ -45,7 +45,7 @@ public class SeckillServiceImpl implements SeckillService {
     private RedisUtil redisUtil;
 
     //查询前5条秒杀商品
-    //key：listSeckill  value：序列化后的List<Seckill>
+    //key：getSeckillList  value：序列化后的List<Seckill>
     @Cacheable(value = "aboutSeckill")
     @Override
     public List<Seckill> getSeckillList() {

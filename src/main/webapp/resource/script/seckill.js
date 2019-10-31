@@ -1,4 +1,3 @@
-//电话加入cookie失败，没用引用到cookie.js
 //存放主要交互逻辑
 //javascript 模块化
 var seckill = {
@@ -14,7 +13,7 @@ var seckill = {
             return '/seckill/' + seckillId + '/' + md5 + '/execution';
         },
         result: function (seckillId) {
-            return '/sekcill/' + seckillId + '/result';
+            return '/seckill/' + seckillId + '/result';
         }
     },
 
@@ -145,10 +144,10 @@ var seckill = {
                             if(result && result['success']) {
                                 var killResult = result['data']
                                 var stateInfo = killResult['stateInfo']
+                                //显示秒杀结果
+                                node.html('<span class="label label-succee">' +stateInfo + '</span>')
                                 if(stateInfo==="排队中") {    //排队中
                                     seckill.getResult(seckillId, node);
-                                } else {    //直接显示
-                                    node.html('<span class="label label-succee">' +stateInfo + '</span>')
                                 }
                             }
 

@@ -31,24 +31,17 @@
           p:timeout="${redis.timeout}"
     />
 
-    <!-- 给redisTemplate设置key和value的序列化方式
-         如果使用Jackson2JsonRedisSerializer序列化方式，可以在Configuration类中进行配置 -->
-    <bean id="keySerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
-    <bean id="valueSerializer" class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer"/>
-    <bean id="hashKeySerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
-    <bean id="hashValueSerlizer" class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer"/>
-
     <!-- 在Configuration类中来配置RedisTemplate，目的是使用JSON序列化设置 -->
-    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate"
-          p:connectionFactory-ref="jedisConnectionFactory"
-          p:keySerializer-ref="keySerializer"
-          p:valueSerializer-ref="valueSerializer"
-          p:hashKeySerializer-ref="hashKeySerializer"
-          p:hashValueSerializer-ref="hashValueSerlizer"
-    />
+<!--    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate"-->
+<!--          p:connectionFactory-ref="jedisConnectionFactory"-->
+<!--          p:keySerializer-ref="keySerializer"-->
+<!--          p:valueSerializer-ref="valueSerializer"-->
+<!--          p:hashKeySerializer-ref="hashKeySerializer"-->
+<!--          p:hashValueSerializer-ref="hashValueSerlizer"-->
+<!--    />-->
     <!-- 对RedisTemplate的进一步封装-->
     <bean id="redisUtil" class="com.zxf.seckill.util.RedisUtil">
-        <property name="redisTemplate" ref="redisTemplateCount"/>
+        <property name="redisTemplate" ref="redisTemplate"/>
     </bean>
 
     <!-- 配置RedisCacheManager -->
@@ -63,12 +56,6 @@
         </property>
     </bean>
 
-    <!-- 配置RedisCacheConfig -->
-    <bean id="redisConfig" class="com.zxf.seckill.config.RedisConfig">
-        <constructor-arg ref="jedisConnectionFactory"/>
-        <constructor-arg ref="redisTemplate"/>
-        <constructor-arg ref="redisCacheManager"/>
-    </bean>
-
+    <!-- 获取config中的bean -->
     <context:component-scan base-package="com.zxf.seckill.config"/>
 </beans>

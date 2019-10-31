@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 public class RedisUtil {
-
     private RedisTemplate<String, Object> redisTemplate;
 
     public void setRedisTemplate(RedisTemplate<String, Object> redisTemplate) {
@@ -22,7 +21,6 @@ public class RedisUtil {
     public RedisTemplate<String, Object> getRedisTemplate() {
         return redisTemplate;
     }
-
     /*********************** 通用方法 ***********************/
     /**
      * 指定缓存的失效时间
@@ -48,7 +46,8 @@ public class RedisUtil {
 
     /********************** String *************************/
     public Object get(String key) {
-        return key == null ? null : redisTemplate.opsForValue().get(key);
+        if(key ==null) return null;
+        return redisTemplate.opsForValue().get(key);
     }
 
     /**
@@ -109,15 +108,25 @@ public class RedisUtil {
         }
     }
 
-    static final String PREFIX_LOCK = "redis_lock_";
-    public boolean getLock(String key) {
+    private static final String PREFIX_LOCK = "redis_lock_";
+
+    /**
+     * 获取锁
+     * @param key
+     * @return
+     */
+     boolean getLock(String key) {
         String k = PREFIX_LOCK + key;
         boolean result = redisTemplate.opsForValue().setIfAbsent(k, "");
         if(result) expire(k, 3);
         return result;
     }
 
-    public void deleteLock(String key) {
+    /**
+     * 删除锁
+     * @param key
+     */
+    void deleteLock(String key) {
         redisTemplate.delete(PREFIX_LOCK + key);
     }
 
