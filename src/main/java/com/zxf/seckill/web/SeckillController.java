@@ -10,9 +10,11 @@ import com.zxf.seckill.exception.DataRewriteException;
 import com.zxf.seckill.exception.RepeatKillException;
 import com.zxf.seckill.exception.SeckillCloseException;
 import com.zxf.seckill.exception.UnderStockException;
-import com.zxf.seckill.mq.RabbitMessage;
+import com.zxf.seckill.entity.RabbitMessage;
 import com.zxf.seckill.service.SeckillService;
 import com.zxf.seckill.util.RedisUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -54,7 +56,7 @@ public class SeckillController {
         Seckill seckill = seckillService.getSeckillById(seckillId);
         if (seckill == null) {
             //forward跳转：转发后浏览器地址栏还是原来的地址，共享之前请求中的数据。
-            return "forward:/seckill/list";
+            return "forward:/list";
         }
 
         model.addAttribute("seckill", seckill);
@@ -140,6 +142,7 @@ public class SeckillController {
         }
     }
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @PostMapping(value = "/{seckillId}/{md5}/execution", produces = {"application/json;charset=UTF-8"})
     @ResponseBody
     public SeckillResult<SeckillExecution> executeMQ(
@@ -150,7 +153,9 @@ public class SeckillController {
         if (phone == null) {
             return new SeckillResult<>(false, "用户未注册");
         }
+        logger.info("phone: " + phone);
 
+        logger.info("rabbitTemplate: " + rabbitTemplate);
         //将用户的秒杀请求放入到MQ中，状态为排队中
         rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME, new RabbitMessage(seckillId, phone, md5));
 

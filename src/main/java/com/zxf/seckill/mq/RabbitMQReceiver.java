@@ -3,6 +3,7 @@ package com.zxf.seckill.mq;
 import com.zxf.seckill.config.RabbitMQConfig;
 import com.zxf.seckill.dto.SeckillExecution;
 import com.zxf.seckill.dto.SeckillResult;
+import com.zxf.seckill.entity.RabbitMessage;
 import com.zxf.seckill.entity.Seckill;
 import com.zxf.seckill.enums.SeckillStateEnum;
 import com.zxf.seckill.exception.DataRewriteException;
@@ -13,35 +14,31 @@ import com.zxf.seckill.service.SeckillService;
 import com.zxf.seckill.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 /**
  * 当监听到队列中有消息时，会进行接收并处理
  */
-
-
-@RabbitListener(queues = RabbitMQConfig.QUEUE_NAME)
+@Component
+@EnableRabbit
 public class RabbitMQReceiver {
     private Logger logger = LoggerFactory.getLogger(getClass());
+
+    @Autowired
     private SeckillService seckillService;
+    @Autowired
     private RedisUtil redisUtil;
 
-   void setSeckillService(SeckillService seckillService) {
-        this.seckillService = seckillService;
-    }
-
-
-    public void setRedisUtil(RedisUtil redisUtil) {
-        this.redisUtil = redisUtil;
-    }
 
     /**
      * 将处理的结果放入到redis中，由客户端定时轮询处理结果
      */
-    @RabbitHandler
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME)
     public void handleMessage(RabbitMessage rabbitMessage) {
         logger.debug("消费者" + this + "收到MQ消息：" + rabbitMessage);
 
@@ -54,7 +51,6 @@ public class RabbitMQReceiver {
         SeckillExecution execution = null;
         SeckillResult<SeckillExecution> result;
         try{
-            //TODO: 对于秒杀失败的情况，是在MQ中处理，还是在service方法处理？
             //1.判断秒杀时间
             Seckill seckill = (Seckill)redisUtil.get("seckill_" + seckillId);
             Date nowTime = new Date();
@@ -84,8 +80,7 @@ public class RabbitMQReceiver {
             //秒杀结果：数据重写
             execution = SeckillExecution.unsuccess(seckillId, SeckillStateEnum.DATA_REWRITE);
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             //秒杀结果：系统错误
             execution = SeckillExecution.unsuccess(seckillId, SeckillStateEnum.INNER_ERROR);
         } finally {

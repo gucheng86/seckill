@@ -97,7 +97,7 @@ var seckill = {
                 seckillBox.html(format);
             }).on('finish.countdown', function () { //时间完成后回调事件
                 //获取秒杀地址,控制现实逻辑,执行秒杀
-                console.log('______fininsh.countdown');
+                console.log('fininsh.countdown');
                 //获取秒杀地址，控制实现逻辑，执行秒杀
                 seckill.handlerSeckill(seckillId, seckillBox);
             });
@@ -147,7 +147,7 @@ var seckill = {
                                 //显示秒杀结果
                                 node.html('<span class="label label-succee">' +stateInfo + '</span>')
                                 if(stateInfo==="排队中") {    //排队中
-                                    seckill.getResult(seckillId, node);
+                                    seckill.getResult(seckillId);
                                 }
                             }
 
@@ -167,16 +167,20 @@ var seckill = {
     },
     
     //4.向后端询问排队结果
-    getResult: function (seckillId, node) {
-      $.get(seckill.URL.result(seckillId), {} ,function (result) {
-          var stateInfo = result['data']['stateInfo'];
-          if(stateInfo === "排队中") {    //排队中，1s后向服务器查询结果
-            setTimeout(function () {
-                this.getResult(seckillId);
-            }, 1000)
-          } else{   //显示秒杀结果
-              node.html('<span class="label label-succee">' +stateInfo + '</span>')
-          }
-      })
+    getResult: function (seckillId) {
+        var count = 3;
+        while(count-- > 0) {
+            $.get(seckill.URL.result(seckillId), {} ,function (result) {
+                var stateInfo = result['data']['stateInfo'];
+                if(stateInfo === "排队中") {    //排队中，1s后向服务器查询结果
+                    setTimeout(function () {
+                        seckill.getResult(seckillId);
+                    }, 1000)
+                } else{   //显示秒杀结果
+                    $('#seckill-box').html('<span class="label label-succee">' +stateInfo + '</span>')
+                }
+            })
+        }
+
     }
 }

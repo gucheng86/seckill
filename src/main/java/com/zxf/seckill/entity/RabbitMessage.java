@@ -1,9 +1,11 @@
-package com.zxf.seckill.mq;
+package com.zxf.seckill.entity;
+
+import java.io.Serializable;
 
 /**
  * 发送给RabbitMQ的消息
  */
-public class RabbitMessage {
+public class RabbitMessage implements Serializable {
     //秒杀商品的id，用户id， 秒杀商品地址
     private long seckillId;
     private long userPhone;
@@ -33,7 +35,9 @@ public class RabbitMessage {
         this.userPhone = userPhone;
     }
 
+    public RabbitMessage() {super();}
     public RabbitMessage(long seckillId, long userPhone, String md5) {
+        super();
         this.seckillId = seckillId;
         this.userPhone = userPhone;
         this.md5 = md5;

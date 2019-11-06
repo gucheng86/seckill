@@ -1,29 +1,25 @@
 package com.zxf.seckill.config;
 
+import com.zxf.seckill.entity.RabbitMessage;
 import org.junit.Test;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.junit.runner.RunWith;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@ContextConfiguration(value = "classpath:spring/spring-redis.xml")
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(value = "classpath:spring/*.xml")
 public class RabbitMQConfigTest {
     @Autowired
     RabbitTemplate rabbitTemplate;
-    @Autowired
-    ConnectionFactory connectionFactory;
-
-    @Autowired
-    RedisTemplate redisTemplate;
 
 
     @Test
     public void test() {
-        ApplicationContext context = new AnnotationConfigApplicationContext(RabbitMQConfig.class);
-        RabbitTemplate rabbitTemplate = (RabbitTemplate)context.getBean("rabbitTemplate");
         System.out.println(rabbitTemplate);
+//        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME, "template message");
+        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME, new RabbitMessage(1,1,""));
     }
+
 }
